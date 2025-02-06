@@ -33,7 +33,7 @@ router.post("/signup", async (req, res, next) => {
     res
       .status(201)
       .json({ message: "Account Created Successfully 🚀🚀", data: user });
-  } catch (error) {
+  } catch (err) {
     console.error(err.message); // Log the error for debugging
 
     res.status(500).json({
@@ -63,7 +63,7 @@ router.post("/login", async (req, res, next) => {
     res
       .status(200)
       .json({ message: `Welcome ${user.firstName} ${user.lastName}!` });
-  } catch (error) {
+  } catch (err) {
     console.error(err.message); // Log the error for debugging
 
     res.status(500).json({
