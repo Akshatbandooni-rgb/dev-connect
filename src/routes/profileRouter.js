@@ -6,13 +6,12 @@ const Constants = require("../constants/constants");
 // Route to view user profile information (GET request)
 router.get("/view", (req, res) => {
   try {
-    const { token } = req.cookies;
-    const decodedToken = jwt.verify(token, Constants.JWT_SECRET_KEY);
+    const user = req.loggedInUser;
     res.status(200).json({
-      message: "📊 User Profile Information retrieved successfully!",
+      data: user,
     });
   } catch (error) {
-    res.status(400).json({message:error.message})
+    res.status(400).json({ message: error.message });
   }
 });
 
