@@ -10,7 +10,7 @@ router.post("/signup", async (req, res, next) => {
   try {
     const { firstName, lastName, email, age, gender, password } = req.body;
 
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password || !age || !gender) {
       throw new Error("All fields are required");
     }
     if (!validator.isStrongPassword(password)) {
