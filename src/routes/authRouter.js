@@ -3,6 +3,8 @@ const router = express.Router();
 const User = require("../models/user");
 const validator = require("validator");
 const bcrypt = require("bcrypt");
+const Constants = require("../constants/constants");
+const jwt = require("jsonwebtoken");
 
 router.post("/signup", async (req, res, next) => {
   try {
@@ -59,7 +61,11 @@ router.post("/login", async (req, res, next) => {
     if (!isPasswordValid) {
       throw new Error("Invalid Credentials");
     }
+    // Generate a JWT token using the user's ID as payload
+    const token = jwt.sign({ _id: user._id }, Constants.JWT_SECRET_KEY);
 
+    // Set the token as cookie and send it with response
+    res.cookie("token", token);
     res
       .status(200)
       .json({ message: `Welcome ${user.firstName} ${user.lastName}!` });
