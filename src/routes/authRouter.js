@@ -79,6 +79,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
+  res.clearCookie(Constants.TOKEN);
   res.status(200).json({ message: "User Logged Out 🚀🚀" });
 });
 
