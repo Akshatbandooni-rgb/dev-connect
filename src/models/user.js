@@ -21,53 +21,69 @@ Steps to Create a Document in Mongoose:
    - Call `.save()` to store it in the database.
 */
 
-const mongoose = require('mongoose')
-const validator = require('validator');
+const mongoose = require("mongoose");
+const validator = require("validator");
+const bcrypt = require("bcrypt");
+const Constants = require("../constants/constants");
+const jwt = require("jsonwebtoken");
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     firstName: {
-        type: String,
-        required: true,
-        minLength: 4,
-        maxLength: 200
+      type: String,
+      required: true,
+      minLength: 4,
+      maxLength: 200,
     },
     lastName: {
-        type: String,
-        required: true,
-        maxLength: 200
+      type: String,
+      required: true,
+      maxLength: 200,
     },
     email: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        validate: {
-            validator: function (value) {
-               return validator.isEmail(value)
-            },
-            message: function (props) {
-                return `${props.value} is not a valid email`
-            }
-        }
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      validate: {
+        validator: function (value) {
+          return validator.isEmail(value);
+        },
+        message: function (props) {
+          return `${props.value} is not a valid email`;
+        },
+      },
     },
     age: {
-        type: Number,
-        required: true,
-        min: 18
+      type: Number,
+      required: true,
+      min: 18,
     },
     gender: {
-        type: String,
-        required: true,
-        enum: {
-            values: ['Male', 'Female', 'Other'],
-            message: '{VALUE} is not supported'
-        }
+      type: String,
+      required: true,
+      enum: {
+        values: ["Male", "Female", "Other"],
+        message: "{VALUE} is not supported",
+      },
     },
     password: {
-        type: String,
-        required: true
-    }
-}, { timestamps: true })
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
 
-const UserModel = mongoose.model('User', userSchema)
-module.exports = UserModel
+userSchema.methods.comparePassword = function (enteredPassword) {
+  const passwordHash = this.password;
+  return bcrypt.compare(enteredPassword, passwordHash);
+};
+
+userSchema.methods.generateToken = function () {
+  const token = jwt.sign({ _id: this._id }, Constants.JWT_SECRET_KEY);
+  return token;
+};
+
+const UserModel = mongoose.model("User", userSchema);
+module.exports = UserModel;

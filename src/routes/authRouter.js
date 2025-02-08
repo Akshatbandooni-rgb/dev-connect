@@ -4,7 +4,6 @@ const User = require("../models/user");
 const validator = require("validator");
 const bcrypt = require("bcrypt");
 const Constants = require("../constants/constants");
-const jwt = require("jsonwebtoken");
 
 router.post("/signup", async (req, res) => {
   try {
@@ -57,12 +56,14 @@ router.post("/login", async (req, res) => {
       throw new Error(`User with email ${email} does not exist`);
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       throw new Error("Invalid Credentials");
     }
     // Generate a JWT token using the user's ID as payload
-    const token = jwt.sign({ _id: user._id }, Constants.JWT_SECRET_KEY);
+    //const token = jwt.sign({ _id: user._id }, Constants.JWT_SECRET_KEY);
+    const token = user.generateToken();
 
     // Set the token as cookie and send it with response
     res.cookie(Constants.TOKEN, token);
