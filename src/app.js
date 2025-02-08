@@ -19,7 +19,7 @@ app.use("/request", userAuthentication, connectionrequestRouter); // Routes rela
 app.use("/user", userAuthentication, userRouter); // Routes related to user management
 
 connectDB()
-  .then((res) => {
+  .then(() => {
     console.log("Database connection Established !!❤️❤️");
     // Start the server and listen on the specified port
     app.listen(PORT, () => {
@@ -27,5 +27,5 @@ connectDB()
     });
   })
   .catch((err) => {
-    console.log("Database connection failed !! 💔💔");
+    console.log("Database connection failed !! 💔💔" + err);
   });

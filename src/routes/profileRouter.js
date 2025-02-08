@@ -1,7 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const jwt = require("jsonwebtoken");
-const Constants = require("../constants/constants");
 
 // Route to view user profile information (GET request)
 router.get("/view", (req, res) => {

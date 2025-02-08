@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 const Constants = require("../constants/constants");
 const jwt = require("jsonwebtoken");
 
-router.post("/signup", async (req, res, next) => {
+router.post("/signup", async (req, res) => {
   try {
     const { firstName, lastName, email, age, gender, password } = req.body;
 
@@ -44,7 +44,7 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
-router.post("/login", async (req, res, next) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -65,7 +65,7 @@ router.post("/login", async (req, res, next) => {
     const token = jwt.sign({ _id: user._id }, Constants.JWT_SECRET_KEY);
 
     // Set the token as cookie and send it with response
-    res.cookie("token", token);
+    res.cookie(Constants.TOKEN, token);
     res
       .status(200)
       .json({ message: `Welcome ${user.firstName} ${user.lastName}!` });

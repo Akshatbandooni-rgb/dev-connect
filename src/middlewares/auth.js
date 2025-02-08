@@ -3,7 +3,7 @@ const Constants = require("../constants/constants");
 const User = require("../models/user");
 const userAuthentication = async (req, res, next) => {
   try {
-    const { token } = req.cookies;
+    const token = req.cookies[Constants.TOKEN];
     if (!token) {
       throw new Error("Access Denied");
     }
