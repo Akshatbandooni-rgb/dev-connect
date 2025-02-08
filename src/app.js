@@ -8,7 +8,7 @@ const userRouter = require("./routes/userRouter");
 const { userAuthentication } = require("./middlewares/auth");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // This enables parsing of JSON data in the request body
 app.use(express.json());
