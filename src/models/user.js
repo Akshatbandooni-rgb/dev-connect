@@ -75,6 +75,11 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.statics.isValidUser = async function (userId) {
+  const user = await this.findById(userId);
+  return user ? true : false;
+};
+
 userSchema.methods.comparePassword = function (enteredPassword) {
   const passwordHash = this.password;
   return bcrypt.compare(enteredPassword, passwordHash);
