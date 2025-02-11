@@ -160,14 +160,16 @@ router.post("/review/accepted/:requestId", async (req, res) => {
 
     // 3.Accept the Connection request ie. Update request status to "accepted"
     connectionRequest.status = SchemaEnums.ConnectionStatus.ACCEPTED;
-    await connectionRequest.save();
+    const connectionData = await connectionRequest.save();
 
-    res.status(200).json({ message: "Request accepted successfully." });
+    res.status(200).json({
+      message: "Request accepted successfully.",
+      data: connectionData,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
-
 
 // Route for rejecting a review request
 router.post("/review/rejected/:requestId", (req, res) => {
