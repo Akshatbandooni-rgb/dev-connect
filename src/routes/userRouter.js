@@ -67,8 +67,8 @@ router.get("/feed", async (req, res) => {
   try {
     const loggedInUserId = req.loggedInUser._id;
     // Fetch all users and filter out the logged-in user
-    let userList = await User.find();
-    userList = userList.filter((user) => !user._id.equals(loggedInUserId));
+    let userList = await User.find({ _id: { $ne: loggedInUserId } });
+
     res.status(200).json({
       data: userList,
       total: userList.length,
