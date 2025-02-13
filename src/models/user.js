@@ -71,6 +71,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // ✅ New Fields for Dating Profile
+    bio: {
+      type: String,
+      default: "", // Short description (default: empty)
+      maxLength: 500,
+    },
+    interests: {
+      type: [String],
+      default: [], // List of interests
+    },
+    languages: {
+      type: [String],
+      default: [], // Spoken languages
+    },
   },
   { timestamps: true }
 );
