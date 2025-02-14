@@ -7,7 +7,17 @@ const Constants = require("../constants/constants");
 
 router.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, email, age, gender, password } = req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      age,
+      gender,
+      password,
+      bio,
+      interests,
+      languages,
+    } = req.body;
 
     if (!firstName || !lastName || !email || !password || !age || !gender) {
       throw new Error("All fields are required");
@@ -29,6 +39,9 @@ router.post("/signup", async (req, res) => {
       age,
       gender,
       password: hashedPassword,
+      bio: bio || "",
+      interests: Array.isArray(interests) ? interests : [],
+      languages: Array.isArray(languages) ? languages : [],
     });
 
     res
