@@ -66,15 +66,17 @@ router.get("/requests", async (req, res) => {
 router.get("/feed", async (req, res) => {
   try {
     const loggedInUserId = req.loggedInUser._id;
-    // Fetch all users and filter out the logged-in user
-    let userList = await User.find({ _id: { $ne: loggedInUserId } });
+
+    const userList = await User.find({ _id: { $ne: loggedInUserId } }).select(
+      "firstName lastName age gender"
+    );
 
     res.status(200).json({
       data: userList,
       total: userList.length,
     });
   } catch (error) {
-    res.status(400).json({ message: error });
+    res.status(500).json({ message: error.message });
   }
 });
 
