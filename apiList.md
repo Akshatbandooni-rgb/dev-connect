@@ -126,6 +126,4 @@ This document lists all available API endpoints, their HTTP methods, description
 
 ---
 
-> **Note:**  
-> Ensure that your client handles JWT tokens appropriately for authenticated endpoints (such as `/view`, `/edit`, and `/password`). For production environments, consider using middleware to verify and authenticate JWT tokens on protected routes.
 
