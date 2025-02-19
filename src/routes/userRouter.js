@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
+const BlockList = require("../models/blockList");
 const ConnectionRequest = require("../models/connectionRequest");
 const SchemaEnums = require("../constants/schema-values.enum");
 
@@ -67,8 +68,49 @@ router.get("/feed", async (req, res) => {
   try {
     const loggedInUserId = req.loggedInUser._id;
 
-    const userList = await User.find({ _id: { $ne: loggedInUserId } }).select(
-      "firstName lastName age gender"
+    // Get blocked users (both ways)
+    const blockedUsers = await BlockList.find({
+      $or: [
+        { blockedByUserId: loggedInUserId },
+        { blockedUserId: loggedInUserId },
+      ],
+    }).distinct("blockedUserId");
+
+    // Get users who are already connected (pending or accepted requests)
+    const sentRequests = await ConnectionRequest.find({
+      fromUserId: loggedInUserId,
+      status: {
+        $in: [
+          SchemaEnums.ConnectionStatus.INTERESTED,
+          SchemaEnums.ConnectionStatus.ACCEPTED,
+        ],
+      },
+    }).distinct("toUserId");
+
+    const receivedRequests = await ConnectionRequest.find({
+      toUserId: loggedInUserId,
+      status: {
+        $in: [
+          SchemaEnums.ConnectionStatus.INTERESTED,
+          SchemaEnums.ConnectionStatus.ACCEPTED,
+        ],
+      },
+    }).distinct("fromUserId");
+
+    const excludedConnections = [
+      ...new Set([...sentRequests, ...receivedRequests]),
+    ];
+
+    // Combine all users to exclude (including the logged-in user)
+    const excludeUsers = [
+      ...blockedUsers,
+      ...excludedConnections,
+      loggedInUserId,
+    ];
+
+    //  Fetch the feed (excluding the above users)
+    const userList = await User.find({ _id: { $nin: excludeUsers } }).select(
+      "firstName lastName age gender bio interests languages"
     );
 
     res.status(200).json({
