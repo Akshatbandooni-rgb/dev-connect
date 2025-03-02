@@ -6,6 +6,7 @@ const profileRouter = require("./routes/profileRouter");
 const connectionrequestRouter = require("./routes/connectionRequestRouter");
 const userRouter = require("./routes/userRouter");
 const { userAuthentication } = require("./middlewares/auth");
+const cors = require("cors");
 
 const app = express();
 const PORT = 3000;
@@ -13,6 +14,7 @@ const PORT = 3000;
 // This enables parsing of JSON data in the request body
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors());
 app.use("/", authRouter); // Routes related to authentication
 app.use("/profile", userAuthentication, profileRouter); // Routes related to user profiles
 app.use("/request", userAuthentication, connectionrequestRouter); // Routes related to connection requests
