@@ -1,5 +1,5 @@
 class APIError extends Error {
-  constructor(message, statusCode) {
+  constructor(statusCode, message) {
     super(message);
     this.statusCode = statusCode;
     this.timeStamp = new Date().toISOString();
