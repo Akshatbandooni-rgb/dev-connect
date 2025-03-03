@@ -4,8 +4,10 @@ const User = require("../models/user");
 const validator = require("validator");
 const bcrypt = require("bcrypt");
 const Constants = require("../constants/constants");
+const ApiResponse = require("../utils/APIResponse");
+const APIError = require("../utils/APIError");
 
-router.post("/signup", async (req, res) => {
+router.post("/signup", async (req, res, next) => {
   try {
     const {
       firstName,
@@ -20,15 +22,15 @@ router.post("/signup", async (req, res) => {
     } = req.body;
 
     if (!firstName || !lastName || !email || !password || !age || !gender) {
-      throw new Error("All fields are required");
+      throw new APIError(403, "All Fields are required");
     }
     if (!validator.isStrongPassword(password)) {
-      throw new Error("Password is too weak");
+      throw new APIError(403, "Password is too weak");
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw new Error(`User with email ${email} already exists`);
+      throw new APIError(403, `User with email ${email} already exists`);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -43,16 +45,15 @@ router.post("/signup", async (req, res) => {
       interests: Array.isArray(interests) ? interests : [],
       languages: Array.isArray(languages) ? languages : [],
     });
+    const successResponse = new ApiResponse(
+      "Account Created Successfully 🚀🚀",
+      201,
+      user
+    ).toJSON();
 
-    res
-      .status(201)
-      .json({ message: "Account Created Successfully 🚀🚀", data: user });
-  } catch (err) {
-    console.error(err.message); // Log the error for debugging
-
-    res.status(500).json({
-      error: err.message || "Internal Server Error",
-    });
+    res.status(201).json(successResponse);
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -80,14 +81,16 @@ router.post("/login", async (req, res) => {
 
     // Set the token as cookie and send it with response
     res.cookie(Constants.TOKEN, token);
-    res
-      .status(200)
-      .json({ message: `Welcome ${user.firstName} ${user.lastName}!` });
+    res.status(200).json({
+      message: `Welcome ${user.firstName} ${user.lastName}!`,
+      success: true,
+    });
   } catch (err) {
     console.error(err.message); // Log the error for debugging
 
     res.status(500).json({
       error: err.message || "Internal Server Error",
+      success: false,
     });
   }
 });
