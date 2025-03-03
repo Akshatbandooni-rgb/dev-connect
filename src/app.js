@@ -7,6 +7,7 @@ const connectionrequestRouter = require("./routes/connectionRequestRouter");
 const userRouter = require("./routes/userRouter");
 const { userAuthentication } = require("./middlewares/auth");
 const cors = require("cors");
+const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
 const PORT = 3000;
@@ -19,6 +20,7 @@ app.use("/", authRouter); // Routes related to authentication
 app.use("/profile", userAuthentication, profileRouter); // Routes related to user profiles
 app.use("/request", userAuthentication, connectionrequestRouter); // Routes related to connection requests
 app.use("/user", userAuthentication, userRouter); // Routes related to user management
+app.use(errorHandler);
 
 connectDB()
   .then(() => {
