@@ -3,83 +3,82 @@ const validator = require("validator");
 const bcrypt = require("bcrypt");
 const { validateProfileEditData } = require("../utils/validation");
 const router = express.Router();
+const ApiResponse = require("../utils/APIResponse");
+const APIError = require("../utils/APIError");
 
-// Route to view user profile information (GET request)
-router.get("/view", (req, res) => {
+// Route to view user profile
+router.get("/view", (req, res, next) => {
   try {
     const user = req.loggedInUser;
-    res.status(200).json({
-      data: user,
-    });
+
+    const successResponse = new ApiResponse(
+      "👤 User profile fetched successfully",
+      200,
+      { user }
+    ).toJSON();
+
+    res.status(200).json(successResponse);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
   }
 });
 
-// Route to edit user profile information (PATCH request)
-router.patch("/edit", async (req, res) => {
+// Route to edit user profile
+router.patch("/edit", async (req, res, next) => {
   try {
     const dataToUpdate = req.body;
     const user = req.loggedInUser;
 
-    const isEditAllowed = validateProfileEditData(dataToUpdate);
-    if (!isEditAllowed) {
-      throw new Error(
-        "❌Profile edit is not allowed. Invalid fields detected!"
-      );
+    if (!validateProfileEditData(dataToUpdate)) {
+      throw new APIError(400, "Invalid fields detected in profile update");
     }
 
-    for (const field of Object.keys(dataToUpdate)) {
-      user[field] = dataToUpdate[field];
-    }
+    Object.assign(user, dataToUpdate);
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message:
-        "✅ User profile updated successfully! Changes are now reflected.",
-    });
+    const successResponse = new ApiResponse(
+      "✅ User profile updated successfully!",
+      200,
+      { user }
+    ).toJSON();
+
+    res.status(200).json(successResponse);
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message:
-        error.message || "⚠️ Unable to update profile. Please try again later.",
-    });
+    next(error);
   }
 });
 
-
-// Route to change user password (PATCH request)
-router.patch("/password", async (req, res) => {
+// Route to change user password
+router.patch("/password", async (req, res, next) => {
   try {
-    //  1. Enforce a Strong Password Policy
-    //  2. Prevent Reusing the Same Password
-    //  3. Hash the New Password Before Storing
-
     const user = req.loggedInUser;
     const { password: updatedPassword } = req.body;
 
-    const isWeakPassword = !validator.isStrongPassword(updatedPassword);
+    if (!validator.isStrongPassword(updatedPassword)) {
+      throw new APIError(400, "Password is too weak");
+    }
+
     const isSameAsOldPassword = await user.comparePassword(updatedPassword);
-
-    if (isWeakPassword) {
-      throw new Error("❌ Password is too weak");
-    }
-
     if (isSameAsOldPassword) {
-      throw new Error("❌ New password cannot be the same as the old password");
+      throw new APIError(
+        400,
+        "New password cannot be the same as the old password"
+      );
     }
 
-    const hashedPassword = await bcrypt.hash(updatedPassword, 10);
-    user.password = hashedPassword;
+    user.password = await bcrypt.hash(updatedPassword, 10);
     await user.save();
 
-    res.status(200).json({ message: "✅ Password updated successfully!" });
+    const successResponse = new ApiResponse(
+      "✅ Password updated successfully!",
+      200
+    ).toJSON();
+
+    res.status(200).json(successResponse);
   } catch (error) {
-    res.status(400).json({ message: error.message || "Internal Server Error" });
+    next(error);
   }
 });
-
 
 // Export the router to be used in the main app
 module.exports = router;
