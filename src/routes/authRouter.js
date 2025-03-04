@@ -57,47 +57,48 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw new Error("All fields are required");
+      throw new APIError(403, "All fields are required");
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      throw new Error(`User with email ${email} does not exist`);
+      throw new APIError(404, `User with email ${email} does not exist`);
     }
 
-    // const isPasswordValid = await bcrypt.compare(password, user.password);
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      throw new Error("Invalid Credentials");
+      throw new APIError(401, "Invalid Credentials");
     }
-    // Generate a JWT token using the user's ID as payload
-    //const token = jwt.sign({ _id: user._id }, Constants.JWT_SECRET_KEY);
+
     const token = user.generateToken();
 
-    // Set the token as cookie and send it with response
     res.cookie(Constants.TOKEN, token);
-    res.status(200).json({
-      message: `Welcome ${user.firstName} ${user.lastName}!`,
-      success: true,
-    });
-  } catch (err) {
-    console.error(err.message); // Log the error for debugging
 
-    res.status(500).json({
-      error: err.message || "Internal Server Error",
-      success: false,
-    });
+    const successResponse = new ApiResponse(
+      `Welcome ${user.firstName} ${user.lastName}!`,
+      200,
+      { token }
+    ).toJSON();
+
+    res.status(200).json(successResponse);
+  } catch (error) {
+    next(error);
   }
 });
 
 router.post("/logout", (req, res) => {
   res.clearCookie(Constants.TOKEN);
-  res.status(200).json({ message: "User Logged Out 🚀🚀" });
+  const successResponse = new ApiResponse(
+    "User Logged Out Successfully 🚀🚀",
+    200
+  ).toJSON();
+
+  res.status(200).json(successResponse);
 });
 
 module.exports = router;
