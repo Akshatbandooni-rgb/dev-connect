@@ -4,14 +4,14 @@ const User = require("../models/user");
 const BlockList = require("../models/blockList");
 const ConnectionRequest = require("../models/connectionRequest");
 const SchemaEnums = require("../constants/schema-values.enum");
+const ApiResponse = require("../utils/APIResponse");
 
 // Route to fetch user connections
-router.get("/connections", async (req, res) => {
+// Fetch user connections
+router.get("/connections", async (req, res, next) => {
   try {
-    // Retrieve the logged-in user
     const currentLoggedInUser = req.loggedInUser;
 
-    // Find allconnections of the user
     const connections = await ConnectionRequest.find({
       $or: [
         {
@@ -27,44 +27,44 @@ router.get("/connections", async (req, res) => {
       .populate("fromUserId toUserId", "firstName lastName age gender")
       .lean();
 
-    // Respond with the fetched connections
-    res.status(200).json({
-      message: "🔗 User connections fetched",
-      connections,
-    });
+    const successResponse = new ApiResponse(
+      "🔗 User connections fetched successfully",
+      200,
+      { connections }
+    ).toJSON();
+
+    res.status(200).json(successResponse);
   } catch (error) {
-    console.error("Error fetching user connections:", error);
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
 
-// Route to fetch user requests
-router.get("/requests", async (req, res) => {
+// Fetch user requests
+router.get("/requests", async (req, res, next) => {
   try {
-    // Retrieve the logged-in user
     const currentLoggedInUser = req.loggedInUser;
 
-    // Fetch connection requests for the user with status "INTERESTED"
     const connectionRequests = await ConnectionRequest.find({
       toUserId: currentLoggedInUser._id,
       status: SchemaEnums.ConnectionStatus.INTERESTED,
     })
-      .populate("fromUserId", "firstName lastName age gender") // Populate sender details
+      .populate("fromUserId", "firstName lastName age gender")
       .lean();
 
-    // Respond with the fetched requests
-    res.status(200).json({
-      message: "📥 User requests fetched",
-      requests: connectionRequests,
-    });
+    const successResponse = new ApiResponse(
+      "📥 User requests fetched successfully",
+      200,
+      { requests: connectionRequests }
+    ).toJSON();
+
+    res.status(200).json(successResponse);
   } catch (error) {
-    console.error("Error fetching connection requests:", error);
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
 
-// Route to fetch user feed
-router.get("/feed", async (req, res) => {
+// Fetch user feed
+router.get("/feed", async (req, res, next) => {
   try {
     const loggedInUserId = req.loggedInUser._id;
 
@@ -108,17 +108,20 @@ router.get("/feed", async (req, res) => {
       loggedInUserId,
     ];
 
-    //  Fetch the feed (excluding the above users)
+    // Fetch the feed (excluding the above users)
     const userList = await User.find({ _id: { $nin: excludeUsers } }).select(
       "firstName lastName age gender bio interests languages"
     );
 
-    res.status(200).json({
-      data: userList,
-      total: userList.length,
-    });
+    const successResponse = new ApiResponse(
+      "📰 User feed fetched successfully",
+      200,
+      { users: userList, total: userList.length }
+    ).toJSON();
+
+    res.status(200).json(successResponse);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
 
