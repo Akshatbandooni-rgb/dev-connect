@@ -4,6 +4,8 @@ const SchemaEnums = require("../constants/schema-values.enum");
 const User = require("../models/user");
 const ConnectionRequest = require("../models/connectionRequest");
 const BlockList = require("../models/blockList");
+const ApiResponse = require("../utils/APIResponse");
+const APIError = require("../utils/APIError");
 
 // Route for sending an 'interested' request to a user
 router.post("/send/interested/:toUserId", async (req, res) => {
@@ -180,7 +182,7 @@ router.post("/review/rejected/:requestId", (req, res) => {
 });
 
 //Route to block a use
-router.post("/block/:toUserId", async (req, res) => {
+router.post("/block/:toUserId", async (req, res, next) => {
   try {
     const { toUserId } = req.params;
     const user = req.loggedInUser;
@@ -189,13 +191,12 @@ router.post("/block/:toUserId", async (req, res) => {
     // Check if recipient user exists
     const recipientUserExist = await User.isValidUser(toUserId);
     if (!recipientUserExist) {
-      throw new Error("User not found");
+      throw new APIError(404, "User not found");
     }
 
     // Check if blocking self
-    const isBlockingSelf = fromUserId.equals(toUserId);
-    if (isBlockingSelf) {
-      throw new Error("You cannot block yourself");
+    if (fromUserId.equals(toUserId)) {
+      throw new APIError(400, "You cannot block yourself");
     }
 
     // Check if user is already blocked
@@ -207,7 +208,7 @@ router.post("/block/:toUserId", async (req, res) => {
     });
 
     if (isAlreadyBlocked) {
-      throw new Error("User already blocked");
+      throw new APIError(400, "User already blocked");
     }
 
     // Block the user
@@ -219,12 +220,14 @@ router.post("/block/:toUserId", async (req, res) => {
     await blocked.save();
     const blockedUser = await User.findById(toUserId);
 
-    res.status(201).json({
-      message: `You have successfuly blocked ${blockedUser.firstName}`,
-    });
+    const successResponse = new ApiResponse(
+      `✅ You have successfully blocked ${blockedUser.firstName}`,
+      201
+    ).toJSON();
+
+    res.status(201).json(successResponse);
   } catch (error) {
-    console.error("Error blocking user:", error);
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
