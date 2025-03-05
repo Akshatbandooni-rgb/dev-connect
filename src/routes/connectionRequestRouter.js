@@ -73,7 +73,7 @@ router.post("/send/interested/:toUserId", async (req, res, next) => {
 
 
 // Route for sending an 'ignored' request to a user
-router.post("/send/ignored/:toUserId", async (req, res) => {
+router.post("/send/ignored/:toUserId", async (req, res, next) => {
   try {
     const { toUserId } = req.params;
     const user = req.loggedInUser;
@@ -82,30 +82,24 @@ router.post("/send/ignored/:toUserId", async (req, res) => {
     // Check if recipient user exists
     const recipientUserExist = await User.isValidUser(toUserId);
     if (!recipientUserExist) {
-      throw new Error("User not found");
+      throw new APIError(404, "User not found");
     }
 
     // Check if sending request to self
     const isSendingToSelf = user._id.equals(toUserId);
     if (isSendingToSelf) {
-      throw new Error("You cannot send a request to yourself");
+      throw new APIError(400, "You cannot send a request to yourself");
     }
 
     // Check if request already exists (Prevent duplicates)
     const existingRequest = await ConnectionRequest.findOne({
       $or: [
-        {
-          fromUserId: fromUserId,
-          toUserId: toUserId,
-        },
-        {
-          fromUserId: toUserId,
-          toUserId: fromUserId,
-        },
+        { fromUserId: fromUserId, toUserId: toUserId },
+        { fromUserId: toUserId, toUserId: fromUserId },
       ],
     });
     if (existingRequest) {
-      throw new Error("Interest request already sent");
+      throw new APIError(400, "Interest request already sent");
     }
 
     // Check if user has blocked each other
@@ -116,7 +110,8 @@ router.post("/send/ignored/:toUserId", async (req, res) => {
       ],
     });
     if (isBlocked) {
-      throw new Error(
+      throw new APIError(
+        403,
         "You are unable to send a request to this user at this time"
       );
     }
@@ -130,13 +125,17 @@ router.post("/send/ignored/:toUserId", async (req, res) => {
 
     const recipientUser = await User.findById(toUserId);
 
-    res.status(200).json({
-      message: `📩 ${user.firstName} is interested in ${recipientUser.firstName}`,
-    });
+    const successResponse = new ApiResponse(
+      `📩 ${user.firstName} is interested in ${recipientUser.firstName}`,
+      200
+    ).toJSON();
+
+    res.status(200).json(successResponse);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
+
 
 // Route for accepting a review request
 router.post("/review/accepted/:requestId", async (req, res) => {
