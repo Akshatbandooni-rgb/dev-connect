@@ -1,4 +1,6 @@
 const ConnectionRequest = require("../models/connectionRequest");
+const User = require("../models/user"); 
+const BlockList = require("../models/blockList"); 
 const SchemaEnums = require("../constants/schema-values.enum");
 const ApiResponse = require("../utils/APIResponse");
 
