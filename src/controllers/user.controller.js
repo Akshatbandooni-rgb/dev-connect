@@ -33,6 +33,29 @@ const getUserConnection = async (req, res, next) => {
   }
 };
 
+const getUserRequests = async (req, res, next) => {
+  try {
+    const currentLoggedInUser = req.loggedInUser;
+
+    const connectionRequests = await ConnectionRequest.find({
+      toUserId: currentLoggedInUser._id,
+      status: SchemaEnums.ConnectionStatus.INTERESTED,
+    })
+      .populate("fromUserId", "firstName lastName age gender")
+      .lean();
+
+    const successResponse = new ApiResponse(
+      "📥 User requests fetched successfully",
+      200,
+      { requests: connectionRequests }
+    ).toJSON();
+
+    res.status(200).json(successResponse);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   getUserConnection,
+  getUserRequests,
 };
